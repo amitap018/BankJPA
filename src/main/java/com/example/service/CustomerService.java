@@ -11,20 +11,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.custom.CustomRepository;
 import com.example.model.Customer;
 import com.example.repo.CustomerRepository;
 
 import jakarta.transaction.Transactional;
 
 @RestController
-@RequestMapping("/bank")
 public class CustomerService {
 	@Autowired
 	CustomerRepository tm;
 
 	@Autowired
-	CustomRepository custRepo;
+	//CustomRepository custRepo;
 
 	public List<Customer> read() {
 		return tm.findAll();

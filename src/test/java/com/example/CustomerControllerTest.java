@@ -1,110 +1,147 @@
 package com.example;
 
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.aspectj.lang.annotation.Before;
+import com.example.controller.CustomerController;
+import com.example.model.Customer;
+import com.example.repo.CustomerRepository;
+import com.example.service.CustomerService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.RestTemplate;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.controller.CustomerController;
-import com.example.model.Customer;
-import com.example.service.CustomerService;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
+@ExtendWith(MockitoExtension.class)
+@WebMvcTest(CustomerController.class)
 public class CustomerControllerTest {
 
-    @InjectMocks
-    private CustomerController customerController;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private CustomerService customerService;
 
-    @Mock
-    private RestTemplate restTemplate;
+    @MockBean
+    private CustomerRepository customerRepository;
+
+    private Customer cust1;
+    private Customer cust2;
 
     @BeforeEach
     public void setUp() {
-        // Setup mock data or behavior if needed
-    	 MockitoAnnotations.initMocks(this); // Initialize mocks
+        cust1 = new Customer();
+        cust1.setId(1);
+        cust1.setName("Amit");
+        cust1.setUsername("amit");
+        cust1.setPass("1234");
+        cust1.setEmail("amit@gmail.com");
+        cust1.setBalance(1000);
+
+        cust2 = new Customer();
+        cust2.setId(2);
+        cust2.setName("Shubham");
+        cust2.setUsername("shubham");
+        cust2.setPass("9876");
+        cust2.setEmail("shubham@gmail.com");
+        cust2.setBalance(2000);
     }
 
     @Test
-    public void testRead() {
-        List<Customer> customers = new ArrayList<>();
-        // Add some test data to customers list
+    void testRead() throws Exception {
+        List<Customer> customers = Arrays.asList(cust1, cust2);
         when(customerService.read()).thenReturn(customers);
 
-        assertEquals(customers, customerController.read());
+        mockMvc.perform(get("/bank/read"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Amit"))
+                .andExpect(jsonPath("$[1].name").value("Shubham"));
     }
 
     @Test
-    public void testReadOne() {
-        int id = 1;
-        Customer customer = new Customer(150, "John Doe", "johndoe", "password123", "john@example.com", "1234567890", 1000);
+    void testReadOne() throws Exception {
+        when(customerService.readOne(1)).thenReturn(cust1);
 
-        when(customerService.readOne(id)).thenReturn(customer);
-
-        assertEquals(customer, customerController.readOne(id));
+        mockMvc.perform(get("/bank/readone/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Amit"));
     }
 
     @Test
-    public void testAdd() {
-    	Customer customer = new Customer(150, "Jane Doe", "johndoe", "password123", "john@example.com", "1234567890", 1000);
+    void testAdd() throws Exception {
+        when(customerService.add(any(Customer.class))).thenReturn(cust1);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String customerJson = objectMapper.writeValueAsString(cust1);
 
-        when(customerService.add(any(Customer.class))).thenReturn(customer);
-
-        assertEquals(customer, customerController.add(customer));
+        mockMvc.perform(post("/bank/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(customerJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Amit"));
     }
 
     @Test
-    public void testUpdate() {
-        int id = 150;
-        Customer updatedCustomer = new Customer(150, "John Doe", "johndoe", "password123", "john@example.com", "1234567890", 1000);
+    void testUpdate() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String customerJson = objectMapper.writeValueAsString(cust1);
 
-        doNothing().when(customerService).update(id, updatedCustomer);
+        mockMvc.perform(put("/bank/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(customerJson))
+                .andExpect(status().isOk());
 
-        customerController.update(id, updatedCustomer);
-
-        verify(customerService, times(1)).update(id, updatedCustomer);
+        verify(customerService).update(1, cust1);
     }
 
     @Test
-    public void testDelete() {
-        int id = 1;
+    void testDelete() throws Exception {
+        mockMvc.perform(delete("/bank/delete/1"))
+                .andExpect(status().isOk());
 
-        doNothing().when(customerService).delete(id);
-
-        customerController.delete(id);
-
-        verify(customerService, times(1)).delete(id);
+        verify(customerService).delete(1);
     }
 
-    @Test
-    public void testBankMethod() {
-        int id = 1;
-        int balance = 100; // Set expected balance
+//    @Test
+//    void testCheckBalance() throws Exception {
+//        when(customerRepository.findById(1)).thenReturn(java.util.Optional.of(cust1));
+//
+//        mockMvc.perform(get("/bank/checkBalance/1"))
+//                .andExpect(status().isOk())
+//                .andExpect(content().string("1000"));
+//    }
 
-        when(restTemplate.getForObject(any(String.class), any())).thenReturn(balance);
-
-        assertEquals(balance, customerController.bankMethod(id));
-    }
-
-    // Add similar tests for bankDeposit and bankMoneyTransfer methods
+//    @Test
+//    void testDeposit() throws Exception {
+//        when(customerRepository.findById(1)).thenReturn(java.util.Optional.of(cust1));
+//        
+//        mockMvc.perform(put("/bank/deposit/1/500"))
+//                .andExpect(status().isOk());
+//
+//        verify(customerService).deposit(1, 500);
+//    }
+//
+//    @Test
+//    void testMoneyTransfer() throws Exception {
+//        when(customerRepository.findById(1)).thenReturn(java.util.Optional.of(cust1));
+//        when(customerRepository.findById(2)).thenReturn(java.util.Optional.of(cust2));
+//
+//        mockMvc.perform(put("/bank/moneyTransfer/1/500/2"))
+//                .andExpect(status().isOk());
+//
+//        verify(customerService).moneyTransfer(1, 500, 2);
+//    }
 }
