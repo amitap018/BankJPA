@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -104,7 +105,8 @@ public class CustomerControllerTest {
                         .content(customerJson))
                 .andExpect(status().isOk());
 
-        verify(customerService).update(1, cust1);
+        verify(customerService).update(eq(1), any(Customer.class));
+
     }
 
     @Test
