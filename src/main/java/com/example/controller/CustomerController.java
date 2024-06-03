@@ -63,22 +63,22 @@ public class CustomerController {
 		cs.delete(id);
 	}
 
-	@GetMapping("/checkBalance/{id}")
-	public int bankMethod(@PathVariable int id) {
-		int customerResponse = rs.getForObject("http://localhost:8889/customer/checkBalance/" + id, Integer.class);
-		return customerResponse;
-	}
-
-	@PutMapping("/deposit/{id}/{amount}")
-	public void bankDeposit(@PathVariable int id,@PathVariable int amount) {
-		rs.put("http://localhost:8889/customer/deposit/" + id + "/"+ amount, Integer.class);
-		
-	}
-	
-	@PutMapping("/moneyTransfer/{id}/{amount}/{receiverId}")
-	public void bankMoneyTransfer(@PathVariable int id, @PathVariable int amount,
-			@PathVariable int receiverId) {
-		rs.put("http://localhost:8889/customer/moneyTransfer/" + id + "/"+ amount+ "/"+receiverId, Integer.class);
-		
-	}
+//	@GetMapping("/checkBalance/{id}")
+//	public int bankMethod(@PathVariable int id) {
+//		int customerResponse = rs.getForObject("http://localhost:8889/customer/checkBalance/" + id, Integer.class);
+//		return customerResponse;
+//	}
+//
+//	@PutMapping("/deposit/{id}/{amount}")
+//	public void bankDeposit(@PathVariable int id,@PathVariable int amount) {
+//		rs.put("http://localhost:8889/customer/deposit/" + id + "/"+ amount, Integer.class);
+//		
+//	}
+//	
+//	@PutMapping("/moneyTransfer/{id}/{amount}/{receiverId}")
+//	public void bankMoneyTransfer(@PathVariable int id, @PathVariable int amount,
+//			@PathVariable int receiverId) {
+//		rs.put("http://localhost:8889/customer/moneyTransfer/" + id + "/"+ amount+ "/"+receiverId, Integer.class);
+//		
+//	}
 }
